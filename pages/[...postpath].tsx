@@ -4,28 +4,33 @@ import { GetServerSideProps } from 'next';
 import { GraphQLClient, gql } from 'graphql-request';
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const endpoint = 'http://pro-techs-bloggers.lovestoblog.com/graphql';
+  const endpoint = "http://pro-techs-bloggers.lovestoblog.com/graphql";
   const graphQLClient = new GraphQLClient(endpoint);
   const referringURL = ctx.req.headers?.referer || null;
   const pathArr = ctx.query.postpath as Array<string>;
-  const path = pathArr.join('/'); // This should produce the correct path (no slashes around the post)
+  
+  // Join the path array to form the complete path
+  const path = pathArr.join('/');
+  console.log('Requested path:', path);  // Log the path to see what is being requested
+  
   const fbclid = ctx.query.fbclid;
 
-  console.log('Requested path:', path);
-
-  // Redirect if Facebook is the referrer or the request contains fbclid
+  // Redirect if Facebook is the referer or request contains fbclid
   if (referringURL?.includes('facebook.com') || fbclid) {
     return {
       redirect: {
         permanent: false,
-        destination: `http://pro-techs-bloggers.lovestoblog.com/${encodeURI(path)}`,
+        destination: `${'http://pro-techs-bloggers.lovestoblog.com/'}${encodeURI(path as string)}`,
       },
     };
   }
 
+  // Log the final URL before making the GraphQL query
+  console.log('Requesting data from GraphQL API for path:', path);
+
   const query = gql`
     {
-      post(id: "${path}", idType: URI) {
+      post(id: "/${path}/", idType: URI) {
         id
         excerpt
         title
@@ -50,11 +55,12 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   try {
     const data = await graphQLClient.request(query);
-    console.log('GraphQL response:', data);
 
-    // Check if data is returned and contains the post
-    if (!data || !data.post) {
-      console.error('No post data found for path:', path);
+    // Log the response to see what data is returned from the GraphQL API
+    console.log("GraphQL response data:", data);
+
+    if (!data.post) {
+      console.log("Post not found for path:", path);  // Log if the post is not found
       return {
         notFound: true,
       };
@@ -68,7 +74,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       },
     };
   } catch (error) {
-    console.error('GraphQL request failed:', error);
+    console.error("GraphQL API request failed:", error);
     return {
       notFound: true,
     };
@@ -84,7 +90,7 @@ interface PostProps {
 const Post: React.FC<PostProps> = (props) => {
   const { post, host, path } = props;
 
-  // To remove tags from excerpt
+  // Function to remove HTML tags from excerpt
   const removeTags = (str: string) => {
     if (str === null || str === '') return '';
     else str = str.toString();
