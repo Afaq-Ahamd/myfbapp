@@ -19,7 +19,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 			redirect: {
 				permanent: false,
 				destination: `${
-					`https://saveourstateok.org/` + encodeURI(path as string)
+					`http://pro-techs-bloggers.lovestoblog.com/` + encodeURI(path as string)
 				}`,
 			},
 		};
@@ -53,7 +53,6 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	if (!data.post) {
 		return {
 			notFound: true,
-			console.log("Non getting correct responce")
 		};
 	}
 	return {
