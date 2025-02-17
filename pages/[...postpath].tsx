@@ -8,7 +8,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const graphQLClient = new GraphQLClient(endpoint);
   const referringURL = ctx.req.headers?.referer || null;
   const pathArr = ctx.query.postpath as Array<string>;
-  const path = pathArr.join('/');
+  const path = pathArr.join('/'); // This should produce the correct path (no slashes around the post)
   const fbclid = ctx.query.fbclid;
 
   console.log('Requested path:', path);
@@ -25,7 +25,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   const query = gql`
     {
-      post(id: "/${path}/", idType: URI) {
+      post(id: "${path}", idType: URI) {
         id
         excerpt
         title
@@ -50,7 +50,8 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   try {
     const data = await graphQLClient.request(query);
-    
+    console.log('GraphQL response:', data);
+
     // Check if data is returned and contains the post
     if (!data || !data.post) {
       console.error('No post data found for path:', path);
@@ -83,10 +84,11 @@ interface PostProps {
 const Post: React.FC<PostProps> = (props) => {
   const { post, host, path } = props;
 
-  // Function to remove tags from excerpt
+  // To remove tags from excerpt
   const removeTags = (str: string) => {
     if (str === null || str === '') return '';
-    return str.toString().replace(/(<([^>]+)>)/gi, '').replace(/\[[^\]]*\]/, '');
+    else str = str.toString();
+    return str.replace(/(<([^>]+)>)/gi, '').replace(/\[[^\]]*\]/, '');
   };
 
   return (
@@ -100,7 +102,10 @@ const Post: React.FC<PostProps> = (props) => {
         <meta property="article:published_time" content={post.dateGmt} />
         <meta property="article:modified_time" content={post.modifiedGmt} />
         <meta property="og:image" content={post.featuredImage.node.sourceUrl} />
-        <meta property="og:image:alt" content={post.featuredImage.node.altText || post.title} />
+        <meta
+          property="og:image:alt"
+          content={post.featuredImage.node.altText || post.title}
+        />
         <title>{post.title}</title>
       </Head>
       <div className="post-container">
