@@ -53,6 +53,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	if (!data.post) {
 		return {
 			notFound: true,
+			console.log("Non getting correct responce")
 		};
 	}
 	return {
